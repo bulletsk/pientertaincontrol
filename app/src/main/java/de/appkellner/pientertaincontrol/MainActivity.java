@@ -2,12 +2,19 @@ package de.appkellner.pientertaincontrol;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.Dialog;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.os.StrictMode;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -40,7 +47,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private final String TAG="MainActivity";
 
-    private final String PI = "http://192.168.2.114:8999";
+//    private String PI = "http://192.168.2.114:8999";
+    private String PI = "";
 
     Timer timer = new Timer();
     RequestQueue requestQueue;
@@ -82,6 +90,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         TimerTask updateStatus = new UpdateOnTimerTask();
         timer.scheduleAtFixedRate(updateStatus, 0, 2000);
+
+        readSettings();
+
+
+    }
+
+    protected void readSettings() {
+        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+        PI = sharedPref.getString("piip", "");
+    }
+
+    protected void writeSettings() {
+        if (PI.length() == 0) {
+            return;
+        }
+        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putString("piip", PI);
+        editor.apply();
     }
 
     @Override
@@ -99,6 +126,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View v) {
+
+        if (PI.length()==0) return;
 
         switch (v.getId()) {
             case R.id.button_image:
@@ -220,6 +249,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         @Override
         public void run() {
+            if (PI.length()==0) return;
             frame++;
             if (pointsUpdated || (frame % 2 == 0)) {
                 JsonObjectRequest jsonreq = new JsonObjectRequest(Request.Method.GET, PI+"/status",
@@ -286,5 +316,58 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
 
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.settings_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            // action with ID action_refresh was selected
+            case R.id.action_settings:
+                final Dialog dialog = new Dialog(this);
+                dialog.setContentView(R.layout.settings);
+                dialog.setTitle("Settings");
+
+                final EditText editText = dialog.findViewById(R.id.textInputEditText);
+                if (PI.length()>0) {
+                    editText.setText(PI);
+                }
+                Button saveButton = dialog.findViewById(R.id.buttonSave);
+                saveButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        String value = editText.getText().toString();
+                        if (!value.startsWith("http")) {
+                            value = "http://" + value;
+                        }
+                        if (value.lastIndexOf(':') < 5) {
+                            value = value + ":8999";
+                        }
+                        PI = value;
+                        writeSettings();
+                        dialog.dismiss();
+                    }
+                });
+                Button cancelButton = dialog.findViewById(R.id.buttonCancel);
+                cancelButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        dialog.dismiss();
+                    }
+                });
+
+                dialog.show();
+                break;
+            default:
+                break;
+        }
+
+        return true;
     }
 }
