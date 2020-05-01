@@ -23,8 +23,8 @@ public class AreaOverlay extends View {
     int width = 0;
     int height = 0;
 
-    int imageWidth = 1920;
-    int imageHeight = 1080;
+    int imageWidth = 640;
+    int imageHeight = 480;
 
     MainActivity listener = null;
 

@@ -9,6 +9,8 @@ import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.os.StrictMode;
+import android.util.Log;
+import android.util.Pair;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -16,6 +18,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.android.volley.Cache;
@@ -55,6 +58,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     ArrayList<Point> points = new ArrayList<>();
 
+    JSONObject camSettings = new JSONObject();
+
     boolean pointsUpdated = false;
 
     @Override
@@ -70,9 +75,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
         points.add(new Point(0,0));
-        points.add(new Point(1920,0));
-        points.add(new Point(0,1080));
-        points.add(new Point(1920,1080));
+        points.add(new Point(640,0));
+        points.add(new Point(0,480));
+        points.add(new Point(640,480));
 
         AreaOverlay overlay = findViewById(R.id.overlay);
         overlay.setPoints(points);
@@ -215,6 +220,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             obj.put("x", p.x);
                             obj.put("y", p.y);
                             arr.put(obj);
+                            Log.d("log", p.x + " " + p.y);
                         }
                     } catch (JSONException e) {
                         return;
@@ -322,6 +328,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.settings_menu, menu);
+
         return true;
     }
 
@@ -333,6 +340,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 final Dialog dialog = new Dialog(this);
                 dialog.setContentView(R.layout.settings);
                 dialog.setTitle("Settings");
+
+                try {
+                    sliderFromSettings( (SeekBar) dialog.findViewById(R.id.brightness), "brightness" );
+                    sliderFromSettings( (SeekBar) dialog.findViewById(R.id.saturation), "saturation" );
+                    sliderFromSettings( (SeekBar) dialog.findViewById(R.id.contrast), "contrast" );
+                    sliderFromSettings( (SeekBar) dialog.findViewById(R.id.whitebalance_r), "whitebalance_r" );
+                    sliderFromSettings( (SeekBar) dialog.findViewById(R.id.whitebalance_b), "whitebalance_b" );
+                    sliderFromSettings( (SeekBar) dialog.findViewById(R.id.iso), "iso" );
+                    sliderFromSettings( (SeekBar) dialog.findViewById(R.id.shutter), "shutter" );
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
 
                 final EditText editText = dialog.findViewById(R.id.textInputEditText);
                 if (PI.length()>0) {
@@ -349,8 +368,47 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         if (value.lastIndexOf(':') < 5) {
                             value = value + ":8999";
                         }
-                        PI = value;
-                        writeSettings();
+                        if (value.compareTo(PI)!=0) {
+                            PI = value;
+                            writeSettings();
+                        }
+                        try {
+                            JSONObject sendsettings = new JSONObject();
+
+                            setValueIfExists( (SeekBar) dialog.findViewById(R.id.brightness), "brightness", sendsettings);
+                            setValueIfExists( (SeekBar) dialog.findViewById(R.id.saturation), "saturation", sendsettings);
+                            setValueIfExists( (SeekBar) dialog.findViewById(R.id.contrast), "contrast", sendsettings);
+                            setValueIfExists( (SeekBar) dialog.findViewById(R.id.whitebalance_r), "whitebalance_r", sendsettings);
+                            setValueIfExists( (SeekBar) dialog.findViewById(R.id.whitebalance_b), "whitebalance_b", sendsettings);
+                            setValueIfExists( (SeekBar) dialog.findViewById(R.id.iso), "iso", sendsettings);
+                            setValueIfExists( (SeekBar) dialog.findViewById(R.id.shutter), "shutter", sendsettings);
+
+                            if (sendsettings.has("whitebalance_r")) {
+                                setValueIfExists( (SeekBar) dialog.findViewById(R.id.whitebalance_b), "whitebalance_b", sendsettings, true);
+                            } else if (sendsettings.has("whitebalance_b")) {
+                                setValueIfExists( (SeekBar) dialog.findViewById(R.id.whitebalance_r), "whitebalance_r", sendsettings, true);
+                            }
+
+                            if (sendsettings.length()!=0) {
+                                JsonObjectRequest jsonreq = new JsonObjectRequest (Request.Method.PUT, PI + "/camsettings",
+                                        sendsettings, new Response.Listener<JSONObject>() {
+                                    @Override
+                                    public void onResponse(JSONObject response) {
+                                    }
+                                },
+                                        new Response.ErrorListener() {
+                                            @Override
+                                            public void onErrorResponse(VolleyError error) {
+                                                ((TextView) findViewById(R.id.status_bridge)).setText("can not connect to pi");
+                                            }
+                                        });
+                                jsonreq.setTag(TAG);
+                                requestQueue.add(jsonreq);
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
                         dialog.dismiss();
                     }
                 });
@@ -370,4 +428,87 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         return true;
     }
+
+    private Pair<Integer,Integer> minMax(int Id) {
+        Pair<Integer, Integer> p = null;
+        switch (Id) {
+            case R.id.brightness:
+                p = new Pair<>(0,100);
+                break;
+            case R.id.saturation:
+                p = new Pair<>(-100,100);
+                break;
+            case R.id.contrast:
+                p = new Pair<>(-100,100);
+                break;
+            case R.id.whitebalance_r:
+                p = new Pair<>(0,8);
+                break;
+            case R.id.whitebalance_b:
+                p = new Pair<>(0,8);
+                break;
+            case R.id.iso:
+                p = new Pair<>(100,800);
+                break;
+            case R.id.shutter:
+                p = new Pair<>(0,330000);
+                break;
+            default:
+                p = new Pair<>(0,100);
+            break;
+        }
+        return p;
+    }
+
+    private int defaultValue(int Id) {
+        int ret = 0;
+        switch (Id) {
+            case R.id.brightness:
+                ret = 50;
+                break;
+            case R.id.iso:
+                ret = 400;
+                break;
+            case R.id.shutter:
+                ret = 40000;
+                break;
+            default:
+                break;
+        }
+        return ret;
+    }
+
+    private void setValueIfExists( SeekBar b, String key, JSONObject target ) throws JSONException {
+        setValueIfExists(b,key, target, false);
+    }
+
+        private void setValueIfExists( SeekBar b, String key, JSONObject target, boolean force ) throws JSONException {
+        int oldvalue = -100000;
+        if (camSettings.has(key)) {
+            oldvalue = camSettings.getInt(key);
+        }
+        int newvalueSlider = b.getProgress();
+
+        Pair<Integer, Integer> p = minMax(b.getId());
+        int newvalue = Math.round (((float)newvalueSlider / 1000.0f) * (float)(p.second-p.first)) + p.first;
+
+        if (oldvalue != newvalue || force) {
+            target.put(key, newvalue);
+            camSettings.put(key, newvalue);
+        }
+    }
+
+    private void sliderFromSettings(SeekBar seekbar, String key) throws JSONException {
+        int value = 0;
+        if (!camSettings.has(key)) {
+            value = defaultValue(seekbar.getId());
+        } else {
+            value = camSettings.getInt(key);
+        }
+        Pair<Integer, Integer> p = minMax(seekbar.getId());
+        int slidervalue = Math.round(((float)value- p.first) / (float)(p.second-p.first) * 1000.0f);
+        seekbar.setProgress(slidervalue);
+    }
+
+
 }
