@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="450dp"
+    android:layout_height="520dp"
     android:layout_marginStart="15dp"
     android:layout_marginEnd="15dp">
 
@@ -79,7 +79,7 @@
             android:id="@+id/whitebalance_r"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:max="1000"/>
+            android:max="8"/>
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -88,7 +88,7 @@
             android:id="@+id/whitebalance_b"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:max="1000"/>
+            android:max="8"/>
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -104,6 +104,24 @@
             android:text="shutter" />
         <SeekBar
             android:id="@+id/shutter"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="1000"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="area" />
+        <SeekBar
+            android:id="@+id/area"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="1000"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="smooth" />
+        <SeekBar
+            android:id="@+id/smooth"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:max="1000"/>

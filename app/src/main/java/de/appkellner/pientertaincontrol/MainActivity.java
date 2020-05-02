@@ -21,22 +21,14 @@ import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-import com.android.volley.Cache;
-import com.android.volley.Network;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.BasicNetwork;
-import com.android.volley.toolbox.DiskBasedCache;
-import com.android.volley.toolbox.HurlStack;
 import com.android.volley.toolbox.ImageRequest;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.JsonRequest;
-import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.google.android.material.snackbar.Snackbar;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -267,6 +259,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             ((TextView)findViewById(R.id.status_bridge)).setText(response.get("bridge").toString());
                             ((TextView)findViewById(R.id.status_stream)).setText(response.get("stream").toString());
                             ((TextView)findViewById(R.id.status_video)).setText(response.get("video").toString());
+                            camSettings = response.getJSONObject("camerasettings");
                         } catch (JSONException e) {
                             ((TextView)findViewById(R.id.status_bridge)).setText("can not parse reply from pi");
                         }
@@ -349,6 +342,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     sliderFromSettings( (SeekBar) dialog.findViewById(R.id.whitebalance_b), "whitebalance_b" );
                     sliderFromSettings( (SeekBar) dialog.findViewById(R.id.iso), "iso" );
                     sliderFromSettings( (SeekBar) dialog.findViewById(R.id.shutter), "shutter" );
+                    sliderFromSettings( (SeekBar) dialog.findViewById(R.id.area), "area" );
+                    sliderFromSettings( (SeekBar) dialog.findViewById(R.id.smooth), "smooth" );
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -382,6 +377,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             setValueIfExists( (SeekBar) dialog.findViewById(R.id.whitebalance_b), "whitebalance_b", sendsettings);
                             setValueIfExists( (SeekBar) dialog.findViewById(R.id.iso), "iso", sendsettings);
                             setValueIfExists( (SeekBar) dialog.findViewById(R.id.shutter), "shutter", sendsettings);
+                            setValueIfExists( (SeekBar) dialog.findViewById(R.id.area), "area", sendsettings);
+                            setValueIfExists( (SeekBar) dialog.findViewById(R.id.smooth), "smooth", sendsettings);
 
                             if (sendsettings.has("whitebalance_r")) {
                                 setValueIfExists( (SeekBar) dialog.findViewById(R.id.whitebalance_b), "whitebalance_b", sendsettings, true);
@@ -453,6 +450,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.shutter:
                 p = new Pair<>(0,330000);
                 break;
+            case R.id.area:
+                p = new Pair<>(5,200);
+                break;
+            case R.id.smooth:
+                p = new Pair<>(0,100);
+                break;
             default:
                 p = new Pair<>(0,100);
             break;
@@ -472,6 +475,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.shutter:
                 ret = 40000;
                 break;
+            case R.id.whitebalance_r:
+            case R.id.whitebalance_b:
+                ret = 2;
+                break;
+            case R.id.area:
+                ret = 20;
+                break;
+            case R.id.smooth:
+                ret = 0;
+                break;
             default:
                 break;
         }
@@ -482,7 +495,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setValueIfExists(b,key, target, false);
     }
 
-        private void setValueIfExists( SeekBar b, String key, JSONObject target, boolean force ) throws JSONException {
+    private void setValueIfExists( SeekBar b, String key, JSONObject target, boolean force ) throws JSONException {
         int oldvalue = -100000;
         if (camSettings.has(key)) {
             oldvalue = camSettings.getInt(key);
@@ -490,7 +503,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         int newvalueSlider = b.getProgress();
 
         Pair<Integer, Integer> p = minMax(b.getId());
-        int newvalue = Math.round (((float)newvalueSlider / 1000.0f) * (float)(p.second-p.first)) + p.first;
+            int newvalue;
+        switch (b.getId()) {
+            case R.id.whitebalance_r:
+            case R.id.whitebalance_b:
+                newvalue = newvalueSlider;
+                break;
+            default:
+                newvalue = Math.round (((float)newvalueSlider / 1000.0f) * (float)(p.second-p.first)) + p.first;
+                break;
+        }
 
         if (oldvalue != newvalue || force) {
             target.put(key, newvalue);
@@ -506,7 +528,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             value = camSettings.getInt(key);
         }
         Pair<Integer, Integer> p = minMax(seekbar.getId());
-        int slidervalue = Math.round(((float)value- p.first) / (float)(p.second-p.first) * 1000.0f);
+        int slidervalue;
+
+        switch (seekbar.getId()) {
+            case R.id.whitebalance_r:
+            case R.id.whitebalance_b:
+                slidervalue = value;
+                break;
+            default:
+                slidervalue = Math.round(((float) value - p.first) / (float) (p.second - p.first) * 1000.0f);
+                break;
+        }
         seekbar.setProgress(slidervalue);
     }
 
