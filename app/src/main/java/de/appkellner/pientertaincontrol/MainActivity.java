@@ -439,10 +439,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 p = new Pair<>(-100,100);
                 break;
             case R.id.whitebalance_r:
-                p = new Pair<>(0,8);
+                p = new Pair<>(0,800);
                 break;
             case R.id.whitebalance_b:
-                p = new Pair<>(0,8);
+                p = new Pair<>(0,800);
                 break;
             case R.id.iso:
                 p = new Pair<>(100,800);
@@ -477,7 +477,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.whitebalance_r:
             case R.id.whitebalance_b:
-                ret = 2;
+                ret = 200;
                 break;
             case R.id.area:
                 ret = 20;
@@ -503,16 +503,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         int newvalueSlider = b.getProgress();
 
         Pair<Integer, Integer> p = minMax(b.getId());
-            int newvalue;
-        switch (b.getId()) {
-            case R.id.whitebalance_r:
-            case R.id.whitebalance_b:
-                newvalue = newvalueSlider;
-                break;
-            default:
-                newvalue = Math.round (((float)newvalueSlider / 1000.0f) * (float)(p.second-p.first)) + p.first;
-                break;
-        }
+        int newvalue = Math.round (((float)newvalueSlider / 1000.0f) * (float)(p.second-p.first)) + p.first;
 
         if (oldvalue != newvalue || force) {
             target.put(key, newvalue);
@@ -528,17 +519,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             value = camSettings.getInt(key);
         }
         Pair<Integer, Integer> p = minMax(seekbar.getId());
-        int slidervalue;
-
-        switch (seekbar.getId()) {
-            case R.id.whitebalance_r:
-            case R.id.whitebalance_b:
-                slidervalue = value;
-                break;
-            default:
-                slidervalue = Math.round(((float) value - p.first) / (float) (p.second - p.first) * 1000.0f);
-                break;
-        }
+        int slidervalue = Math.round(((float) value - p.first) / (float) (p.second - p.first) * 1000.0f);
         seekbar.setProgress(slidervalue);
     }
 
