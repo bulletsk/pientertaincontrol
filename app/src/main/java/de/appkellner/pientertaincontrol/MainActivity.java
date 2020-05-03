@@ -45,14 +45,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //    private String PI = "http://192.168.2.114:8999";
     private String PI = "";
 
-    Timer timer = new Timer();
-    RequestQueue requestQueue;
+    private final Timer timer = new Timer();
+    private RequestQueue requestQueue;
 
-    ArrayList<Point> points = new ArrayList<>();
+    private ArrayList<Point> points = new ArrayList<>();
 
-    JSONObject camSettings = new JSONObject();
+    private JSONObject camSettings = new JSONObject();
 
-    boolean pointsUpdated = false;
+    private boolean pointsUpdated = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,12 +93,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
-    protected void readSettings() {
+    private void readSettings() {
         SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
         PI = sharedPref.getString("piip", "");
     }
 
-    protected void writeSettings() {
+    private void writeSettings() {
         if (PI.length() == 0) {
             return;
         }
@@ -427,20 +427,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private Pair<Integer,Integer> minMax(int Id) {
-        Pair<Integer, Integer> p = null;
+        Pair<Integer, Integer> p;
         switch (Id) {
             case R.id.brightness:
                 p = new Pair<>(0,100);
                 break;
             case R.id.saturation:
-                p = new Pair<>(-100,100);
-                break;
             case R.id.contrast:
                 p = new Pair<>(-100,100);
                 break;
             case R.id.whitebalance_r:
-                p = new Pair<>(0,800);
-                break;
             case R.id.whitebalance_b:
                 p = new Pair<>(0,800);
                 break;
@@ -512,7 +508,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void sliderFromSettings(SeekBar seekbar, String key) throws JSONException {
-        int value = 0;
+        int value;
         if (!camSettings.has(key)) {
             value = defaultValue(seekbar.getId());
         } else {

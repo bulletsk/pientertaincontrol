@@ -15,7 +15,7 @@
         android:adjustViewBounds="true"
         android:layout_centerHorizontal="true"
         android:scaleType="fitCenter"
-        app:srcCompat="@android:drawable/btn_star_big_on" />
+        app:srcCompat="@drawable/pientertain" />
 
     <de.appkellner.pientertaincontrol.AreaOverlay
         android:id="@+id/overlay"

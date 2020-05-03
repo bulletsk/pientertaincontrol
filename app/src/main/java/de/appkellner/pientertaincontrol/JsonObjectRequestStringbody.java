@@ -13,18 +13,8 @@ import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
 
-public class JsonObjectRequestStringbody extends JsonRequest<JSONObject> {
+class JsonObjectRequestStringbody extends JsonRequest<JSONObject> {
 
-    /**
-     * Creates a new request.
-     *
-     * @param method the HTTP method to use
-     * @param url URL to fetch the JSON from
-     * @param jsonRequest A {@link JSONObject} to post with the request. Null indicates no
-     *     parameters will be posted along with request.
-     * @param listener Listener to receive the JSON response
-     * @param errorListener Error listener, or null to ignore errors.
-     */
     public JsonObjectRequestStringbody(
             int method,
             String url,

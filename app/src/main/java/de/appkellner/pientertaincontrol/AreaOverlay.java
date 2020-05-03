@@ -1,6 +1,5 @@
 package de.appkellner.pientertaincontrol;
 
-import android.content.ClipData;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -8,7 +7,6 @@ import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -16,17 +14,18 @@ import java.util.ArrayList;
 
 public class AreaOverlay extends View {
 
-    ArrayList<Point> points = null;
+    private ArrayList<Point> points = null;
 
-    Paint circlePaint = null;
+    private Paint circlePaint = null;
 
-    int width = 0;
-    int height = 0;
+    private int width = 0;
+    private int height = 0;
 
-    int imageWidth = 640;
-    int imageHeight = 480;
+    private int imageWidth = 640;
+    private int imageHeight = 480;
 
-    MainActivity listener = null;
+    private final MainActivity listener = null;
+    private final ArrayList<Integer> cornerIndices = new ArrayList<>();
 
     public AreaOverlay(Context context) {
         super(context);
@@ -36,10 +35,6 @@ public class AreaOverlay extends View {
         super(context, attrs);
     }
 
-//    void setListener( MainActivity listener ) {
-//        listener = listener;
-//    }
-
     public void setPoints(ArrayList<Point> points) {
         this.points = points;
         invalidate();
@@ -48,6 +43,7 @@ public class AreaOverlay extends View {
     public void setImageSize(int w, int h) {
         imageWidth = w;
         imageHeight = h;
+        invalidate();
     }
 
     @Override
@@ -56,17 +52,7 @@ public class AreaOverlay extends View {
         super.onSizeChanged(w,h,oldw,oldh);
         width = w;
         height = h;
-    }
-
-    private void calculateScalesAndOffsets() {
-
-        float imageAR = (float)imageWidth/(float)imageHeight;
-
-        float scale = (float) width / (float) imageWidth;
-        float ysize = scale * (float)imageHeight;
-
-        float yoffset = ((float)height-ysize) / 2.0f;
-
+        invalidate();
     }
 
     @Override
@@ -87,17 +73,18 @@ public class AreaOverlay extends View {
             float y1 = (float)p1.y/(float)imageHeight*(float)height;
             canvas.drawCircle(x1,y1, 10, circlePaint);
         }
-        ArrayList<Integer> arr = new ArrayList<>();
-        arr.add(0);
-        arr.add(1);
-        arr.add(3);
-        arr.add(2);
-        arr.add(0);
-        for (int i=0;i<arr.size()-1;i++) {
-            Point p1 = points.get(arr.get(i));
+        if (cornerIndices.isEmpty()) {
+            cornerIndices.add(0);
+            cornerIndices.add(1);
+            cornerIndices.add(3);
+            cornerIndices.add(2);
+            cornerIndices.add(0);
+        }
+        for (int i=0;i<cornerIndices.size()-1;i++) {
+            Point p1 = points.get(cornerIndices.get(i));
             float x1 = (float)p1.x/(float)imageWidth*(float)width;
             float y1 = (float)p1.y/(float)imageHeight*(float)height;
-            Point p2 = points.get(arr.get(i+1));
+            Point p2 = points.get(cornerIndices.get(i+1));
             float x2 = (float)p2.x/(float)imageWidth*(float)width;
             float y2 = (float)p2.y/(float)imageHeight*(float)height;
 
